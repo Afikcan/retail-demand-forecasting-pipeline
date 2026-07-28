@@ -56,6 +56,18 @@ paths point at a Unity Catalog Volume:
 3. Deploy the bundle: `databricks bundle deploy --target dev`.
 4. Run the full pipeline: `databricks bundle run retail_demand_pipeline --target dev`.
 
+## Testing
+
+Unit tests cover the pure-logic pieces of the pipeline — sales unpivoting,
+lag/rolling feature construction, and WMAPE scoring — against a local
+Spark session, independent of Databricks or the M5 data itself.
+
+```
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest tests/
+```
+
 ## Results
 
 Evaluated on a 28-day holdout, aggregated to (store, department):

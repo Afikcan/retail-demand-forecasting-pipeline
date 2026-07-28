@@ -1,11 +1,11 @@
 # Retail Demand Forecasting Pipeline
 
 An end-to-end demand forecasting pipeline for retail sales data, built on
-PySpark and Delta Lake and run on Databricks.
+PySpark and Delta Lake, orchestrated and run on Databricks.
 
 ## Problem
 
-Forecast store/item-level demand from historical retail sales, using
+Forecast store/department-level demand from historical retail sales, using
 calendar/holiday and pricing context, and evaluate against a naive baseline.
 
 ## Data
@@ -31,20 +31,21 @@ place under `data/`:
 ```
 data/ (raw CSVs)
   -> upload to Databricks (scripts/upload_to_databricks.sh)
-  -> ingest/01_ingest.py                  load raw CSVs into Databricks
+  -> ingest/01_ingest.py                  load raw CSVs into Databricks (bronze)
   -> ingest/02_clean_join.py              clean, join, write Delta (silver)
   -> features/03_feature_engineering.py   rolling/lag/holiday/price features (gold)
   -> model/04_baseline.py                 seasonal-naive baseline
-  -> model/05_train.py                    LightGBM per store/item-group
-  -> model/06_evaluate.py                 forecast vs. actual, WMAPE, charts
+  -> model/05_train.py                    LightGBM per store/department
+  -> model/06_evaluate.py                 forecast vs. actual, WMAPE, chart
 ```
 
 Runs on **Databricks**, orchestrated as a single [Databricks Asset Bundle](https://docs.databricks.com/en/dev-tools/bundles/index.html)
 job ([`databricks.yml`](databricks.yml), [`resources/retail_demand_job.yml`](resources/retail_demand_job.yml))
 with explicit task dependencies — `baseline` and `train` run in parallel once
 `feature_engineering` finishes, `evaluate` waits on both. Scheduled daily
-(paused by default — flip `pause_status` to `UNPAUSED` to activate). All
-paths point at a Unity Catalog Volume:
+(paused by default — flip `pause_status` to `UNPAUSED` to activate), with
+email alerts and an automatic retry on task failure. All paths point at a
+Unity Catalog Volume:
 `/Volumes/workspace/retail_demand/{raw,bronze,silver,gold,predictions}`.
 
 ## How to run
@@ -80,3 +81,20 @@ Evaluated on a 28-day holdout, aggregated to (store, department):
 LightGBM reduces forecast error by ~26% relative to the naive baseline.
 
 ![Forecast vs. actual](assets/forecast_vs_actual.png)
+
+`scripts/export_predictions.py` also writes a flat, joined CSV of both
+models' predictions (`exports/predictions.csv`) for downstream BI tooling
+that can't read Delta tables directly.
+
+## Project structure
+
+```
+ingest/       raw -> bronze -> silver
+features/     silver -> gold
+model/        baseline, training, evaluation
+scripts/      data upload / export helpers
+resources/    Databricks Asset Bundle job definition
+tests/        unit tests (pytest + local Spark)
+exports/      flat prediction exports for BI tools
+assets/       generated charts
+```

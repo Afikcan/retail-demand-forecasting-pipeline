@@ -20,3 +20,6 @@ venv/
 
 # OS
 .DS_Store
+
+# Personal planning notes, not for the public repo
+PROJECT_SPEC.md

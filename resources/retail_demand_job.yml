@@ -8,6 +8,10 @@ resources:
         timezone_id: "UTC"
         pause_status: PAUSED
 
+      email_notifications:
+        on_failure:
+          - acozbulut@gmail.com
+
       environments:
         - environment_key: default_env
           spec:
@@ -21,6 +25,7 @@ resources:
       tasks:
         - task_key: ingest
           environment_key: default_env
+          max_retries: 1
           spark_python_task:
             python_file: ../ingest/01_ingest.py
 
@@ -28,6 +33,7 @@ resources:
           depends_on:
             - task_key: ingest
           environment_key: default_env
+          max_retries: 1
           spark_python_task:
             python_file: ../ingest/02_clean_join.py
 
@@ -35,6 +41,7 @@ resources:
           depends_on:
             - task_key: clean_join
           environment_key: default_env
+          max_retries: 1
           spark_python_task:
             python_file: ../features/03_feature_engineering.py
 
@@ -42,6 +49,7 @@ resources:
           depends_on:
             - task_key: feature_engineering
           environment_key: default_env
+          max_retries: 1
           spark_python_task:
             python_file: ../model/04_baseline.py
 
@@ -49,6 +57,7 @@ resources:
           depends_on:
             - task_key: feature_engineering
           environment_key: train_env
+          max_retries: 1
           spark_python_task:
             python_file: ../model/05_train.py
 
@@ -57,5 +66,6 @@ resources:
             - task_key: baseline
             - task_key: train
           environment_key: default_env
+          max_retries: 1
           spark_python_task:
             python_file: ../model/06_evaluate.py

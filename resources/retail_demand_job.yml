@@ -1,0 +1,61 @@
+resources:
+  jobs:
+    retail_demand_pipeline:
+      name: retail_demand_pipeline
+
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: "UTC"
+        pause_status: PAUSED
+
+      environments:
+        - environment_key: default_env
+          spec:
+            client: "2"
+        - environment_key: train_env
+          spec:
+            client: "2"
+            dependencies:
+              - lightgbm
+
+      tasks:
+        - task_key: ingest
+          environment_key: default_env
+          spark_python_task:
+            python_file: ../ingest/01_ingest.py
+
+        - task_key: clean_join
+          depends_on:
+            - task_key: ingest
+          environment_key: default_env
+          spark_python_task:
+            python_file: ../ingest/02_clean_join.py
+
+        - task_key: feature_engineering
+          depends_on:
+            - task_key: clean_join
+          environment_key: default_env
+          spark_python_task:
+            python_file: ../features/03_feature_engineering.py
+
+        - task_key: baseline
+          depends_on:
+            - task_key: feature_engineering
+          environment_key: default_env
+          spark_python_task:
+            python_file: ../model/04_baseline.py
+
+        - task_key: train
+          depends_on:
+            - task_key: feature_engineering
+          environment_key: train_env
+          spark_python_task:
+            python_file: ../model/05_train.py
+
+        - task_key: evaluate
+          depends_on:
+            - task_key: baseline
+            - task_key: train
+          environment_key: default_env
+          spark_python_task:
+            python_file: ../model/06_evaluate.py

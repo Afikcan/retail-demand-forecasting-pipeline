@@ -1,0 +1,12 @@
+bundle:
+  name: retail_demand_forecasting_pipeline
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-565a652b-75ed.cloud.databricks.com

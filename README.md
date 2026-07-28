@@ -39,9 +39,13 @@ data/ (raw CSVs)
   -> model/06_evaluate.py                 forecast vs. actual, WMAPE, charts
 ```
 
-Runs on **Databricks** — each step is a `.py` file meant to run against a
-Databricks cluster with Delta Lake available. All paths point at a Unity
-Catalog Volume: `/Volumes/workspace/retail_demand/{raw,bronze,silver,gold,predictions}`.
+Runs on **Databricks**, orchestrated as a single [Databricks Asset Bundle](https://docs.databricks.com/en/dev-tools/bundles/index.html)
+job ([`databricks.yml`](databricks.yml), [`resources/retail_demand_job.yml`](resources/retail_demand_job.yml))
+with explicit task dependencies — `baseline` and `train` run in parallel once
+`feature_engineering` finishes, `evaluate` waits on both. Scheduled daily
+(paused by default — flip `pause_status` to `UNPAUSED` to activate). All
+paths point at a Unity Catalog Volume:
+`/Volumes/workspace/retail_demand/{raw,bronze,silver,gold,predictions}`.
 
 ## How to run
 
@@ -49,9 +53,8 @@ Catalog Volume: `/Volumes/workspace/retail_demand/{raw,bronze,silver,gold,predic
 2. Configure the Databricks CLI (`databricks configure`) and run
    `scripts/upload_to_databricks.sh` to push the raw CSVs into the
    `raw` Volume.
-3. Import this repo's files into a Databricks workspace (or run locally
-   against `requirements.txt` for prototyping).
-4. Run `ingest/01_ingest.py` through `model/06_evaluate.py` in order.
+3. Deploy the bundle: `databricks bundle deploy --target dev`.
+4. Run the full pipeline: `databricks bundle run retail_demand_pipeline --target dev`.
 
 ## Results
 

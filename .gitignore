@@ -1,0 +1,22 @@
+# Data (M5 is a Kaggle competition dataset — don't redistribute raw files)
+data/*
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Databricks
+.databricks/
+*.dbc
+
+# Env / secrets
+.env
+.databrickscfg
+
+# OS
+.DS_Store

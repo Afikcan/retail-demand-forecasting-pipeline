@@ -1,0 +1,6 @@
+pyspark>=3.5
+delta-spark>=3.0
+lightgbm>=4.0
+pandas>=2.0
+numpy>=1.26
+matplotlib>=3.8
